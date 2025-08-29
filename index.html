@@ -8,9 +8,9 @@
       margin: 0;
       height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
       flex-direction: column;
+      justify-content: center;
+      align-items: center;
       background: #0f172a;
       color: #f8fafc;
       font-family: ui-monospace, Menlo, Consolas, monospace;
@@ -21,23 +21,27 @@
       line-height: 1.1;
       margin: 0 0 20px 0;
     }
-    h2 {
-      margin: 10px 0;
+    #aplayer {
+      width: 80%;
+      max-width: 400px;
+      margin-top: 20px;
     }
   </style>
+  <!-- APlayer 样式 -->
+  <link rel="stylesheet" href="https://unpkg.com/aplayer/dist/APlayer.min.css">
 </head>
 <body>
-  <!-- 心形 -->
+  <!-- 爱心 -->
   <pre id="heart"></pre>
-  
-  <!-- 标题 -->
-  <h2>🎵 王力宏 - 大城小爱 🎵</h2>
-  
-  <!-- 音乐播放器 -->
-  <audio src="dachengxiaai.mp3" controls loop></audio>
+
+  <!-- APlayer 播放器容器 -->
+  <div id="aplayer"></div>
+
+  <!-- APlayer 脚本 -->
+  <script src="https://unpkg.com/aplayer/dist/APlayer.min.js"></script>
 
   <script>
-    // 绘制520爱心
+    // 画 520 爱心
     const H = 28, W = 56, S = 12.0, GLYPH = "520";
     function drawHeart() {
       const pre = document.getElementById("heart");
@@ -54,6 +58,19 @@
       pre.textContent = out;
     }
     drawHeart();
+
+    // 初始化 APlayer
+    const ap = new APlayer({
+      container: document.getElementById('aplayer'),
+      autoplay: false,
+      loop: 'all',
+      audio: [{
+        name: '大城小爱',
+        artist: '王力宏',
+        url: 'https://martinmax0711.github.io/music/dachengxiaai.mp3', // 你仓库里的 mp3 地址
+        cover: 'https://p1.music.126.net/pj-4t3bM7Ob7cP5u2A0uVQ==/109951166195658165.jpg' // 可选封面图
+      }]
+    });
   </script>
 </body>
 </html>
