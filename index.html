@@ -15,19 +15,13 @@
     .tip{font:12px/1.4 system-ui, sans-serif;opacity:.8;text-align:center}
     .err{color:#ffb4b4}
     .hide{display:none}
-    /* 播放按钮（右下角） */
-    #playBtn{
-      position:fixed; right:16px; bottom:16px; z-index:50;
-      padding:10px 14px; border:none; border-radius:999px; cursor:pointer;
-      background:rgba(225,29,72,.95); color:#fff; font:14px/1 system-ui,sans-serif;
-      box-shadow:0 6px 18px rgba(0,0,0,.25);
-    }
   </style>
 
-  <!-- APlayer 样式：先用 jsDelivr，失败自动换 unpkg -->
+  <!-- APlayer 样式：优先用 jsDelivr，失败时自动切换到 unpkg -->
   <link id="apcss" rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css">
   <script>
+    // CSS 兜底
     document.getElementById('apcss').addEventListener('error', () => {
       const l = document.createElement('link');
       l.rel = 'stylesheet';
@@ -44,79 +38,59 @@
     <!-- APlayer 容器 -->
     <div id="aplayer"></div>
 
-    <!-- 提示/状态 -->
+    <!-- 可见提示 -->
     <div id="tip" class="tip">🎧 正在加载播放器…</div>
 
-    <!-- APlayer 加载失败 → 原生 audio 兜底 -->
+    <!-- 原生 audio 兜底（当 APlayer 加载失败时显示） -->
     <div id="fallback" class="hide">
       <div class="tip err">APlayer 加载失败，使用原生播放器兜底。</div>
       <audio id="nativeAudio" controls loop
-             src="https://martinmax0711.github.io/music/dachengxiaai.mp3"></audio>
+             src="https://martinmax0711.github.io/dachengxiaai.mp3"></audio>
     </div>
   </div>
 
-  <!-- 播放按钮：点击后恢复音量并播放 -->
-  <button id="playBtn">▶ 播放大城小爱</button>
-
-  <!-- APlayer 脚本：jsDelivr → unpkg 兜底 -->
+  <!-- APlayer 脚本：优先 jsDelivr，失败自动切到 unpkg -->
   <script>
     function loadScript(src, onload){
       const s = document.createElement('script'); s.src = src; s.onload = onload;
       s.onerror = () => onload(false); document.head.appendChild(s);
     }
+    // 先尝试 jsDelivr
     loadScript('https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js', (ok1) => {
       if (ok1 === false || typeof window.APlayer === 'undefined') {
+        // 再尝试 unpkg
         loadScript('https://unpkg.com/aplayer/dist/APlayer.min.js', (ok2) => {
           if (ok2 === false || typeof window.APlayer === 'undefined') initFallback();
           else initPlayer();
         });
-      } else { initPlayer(); }
+      } else {
+        initPlayer();
+      }
     });
 
-    let ap=null;
     function initPlayer(){
-      try{
-        ap = new APlayer({
+      try {
+        const ap = new APlayer({
           container: document.getElementById('aplayer'),
-          autoplay: true,     // 初始静音自动播（浏览器允许）
-          volume: 0,          // 关键：静音，等用户点击按钮再开声
+          autoplay: false,    // 浏览器策略限制自动播放
           loop: 'all',
           audio: [{
             name: '大城小爱',
             artist: '王力宏',
-            url: 'https://martinmax0711.github.io/music/dachengxiaai.mp3', // ← 换成你的直链
+            url: 'https://martinmax0711.github.io/dachengxiaai.mp3', // ← 换成你的直链
             cover: 'https://p1.music.126.net/pj-4t3bM7Ob7cP5u2A0uVQ==/109951166195658165.jpg'
           }]
         });
-        document.getElementById('tip').textContent = '✅ 播放器已加载（点右下角按钮开声音）';
-      }catch(e){ initFallback('初始化异常：'+e.message); }
+        document.getElementById('tip').textContent = '✅ 播放器已加载（如无声，请点播放）';
+      } catch(e){
+        initFallback('播放器初始化异常：' + e.message);
+      }
     }
     function initFallback(msg){
       const tip = document.getElementById('tip');
-      tip.innerHTML = '⚠️ APlayer 加载失败。' + (msg?('<br>'+msg):'');
+      tip.innerHTML = '⚠️ APlayer 加载失败。' + (msg ? ('<br>'+msg) : '');
       document.getElementById('fallback').classList.remove('hide');
     }
-
-    // 播放按钮：用户点击 → 恢复音量并播放
-    document.getElementById('playBtn').addEventListener('click', async () => {
-      try{
-        if (ap) {
-          ap.volume(1.0, true);   // 立刻把音量恢复到 100%
-          await ap.play();
-          document.getElementById('playBtn').style.display = 'none';
-          document.getElementById('tip').textContent = '🎵 播放中';
-        } else {
-          // 兜底：如果用了原生 audio
-          const na = document.getElementById('nativeAudio');
-          if (na) { await na.play(); document.getElementById('playBtn').style.display='none'; }
-        }
-      }catch(e){ alert('播放失败：'+e.message); }
-    });
-
-    // 从后台回到前台时尽量续播
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && ap) ap.play().catch(()=>{});
-    });
 
     // 画 520 爱心
     const H=28,W=56,S=12.0,GLYPH="520";
